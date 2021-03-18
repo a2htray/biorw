@@ -3,6 +3,7 @@ package biorw
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"testing"
 )
@@ -89,3 +90,22 @@ ABABABABABABABABABABABABABABAABABABCDCDCDCDCDCDCD3
 		fmt.Println(seq)
 	}
 }
+
+func Test_NewFastaWriter(t *testing.T) {
+	writer := NewFastaWriter(os.Stdout, 5)
+
+	writer.Write(Sequence{
+		Name:        "sequence1",
+		Description: "description",
+		Residues:    "ABABABABABABABABABABABABABABABABABAAB",
+	})
+
+	writer = NewFastaWriter(os.Stdout, 10)
+
+	writer.Write(Sequence{
+		Name:        "sequence1",
+		Description: "description",
+		Residues:    "ABABABABABABABABABABABABABABABABABAAB",
+	})
+}
+

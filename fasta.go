@@ -6,10 +6,33 @@ import (
 	"io"
 )
 
+type Sequencer interface {
+	GetName() string
+	GetDescription() string
+	GetResidues() string
+	GetLen() int
+}
+
 type Sequence struct {
 	Name        string
 	Description string
 	Residues    string
+}
+
+func (s Sequence) GetName() string {
+	return s.Name
+}
+
+func (s Sequence) GetDescription() string {
+	return s.Description
+}
+
+func (s Sequence) GetResidues() string {
+	return s.Residues
+}
+
+func (s Sequence) GetLen() int {
+	return len(s.Residues)
 }
 
 func (s Sequence) String() string {
@@ -89,5 +112,44 @@ func (r *FastaReader) ReadAll() ([]*Sequence, error) {
 func NewFastaReader(reader io.Reader) *FastaReader {
 	return &FastaReader{
 		reader: bufio.NewReader(reader),
+	}
+}
+
+type FastaWriter struct {
+	writer io.Writer
+	width  int
+}
+
+func (w *FastaWriter) Write(s Sequencer) (n int, err error) {
+	var _n int
+	name, description := s.GetName(), s.GetDescription()
+
+	n, err = w.writer.Write([]byte(">" + name + " " + description + "\n"))
+	if err != nil {
+		return
+	}
+
+	segNum := s.GetLen() / w.width
+	residuesBytes := []byte(s.GetResidues())
+
+	for i := 0; i < segNum+1; i++ {
+
+		src := residuesBytes[i*w.width : (i+1)*w.width]
+		out := make([]byte, len(src))
+		copy(out, src)
+		out = append(out, '\n')
+		_n, err = w.writer.Write(out)
+		n = n + _n
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func NewFastaWriter(writer io.Writer, width int) *FastaWriter {
+	return &FastaWriter{
+		writer: writer,
+		width:  width,
 	}
 }
